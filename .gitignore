@@ -1,0 +1,29 @@
+
+# ignore envs & DBs
+backend/venv/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.db
+*.sqlite
+*.sqlite3
+
+# ignore envs & DBs
+backend/venv/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.db
+*.sqlite
+*.sqlite3
+
+# ignore envs & DBs
+backend/venv/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.db
+*.sqlite*
