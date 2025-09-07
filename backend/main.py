@@ -1,30 +1,41 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, EmailStr
+from sqlalchemy.orm import Session
+from typing import Optional, List, Annotated
 from datetime import datetime
+from database import SessionLocal, engine
+from hashlib import sha256
+
+import models
 
 app = FastAPI()
 
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware( # add protection against CORS
+    CORSMiddleware,
+    allow_origins=origins, # allow specific origins
+)
+
 # ------ User Models ------
 class UserBase(BaseModel):
+    name: str
+    email: str
+    role: Optional[str] = "volunteer"
+    password: str
+
+class UserModel(BaseModel):
     id: int
     name: str
-    email: str
+    email: EmailStr
     role: str
-
+    
     class Config:
-        orm_mode = True # compatibility with ORM objects for data validation
-
-class UserCreate(UserBase):
-    name: str
-    email: str
-    password: str
-
-class UserLogin(BaseModel):
-    email: str
-    password: str
+        orm_mode = True
 
 # ----- Shift Models -----
 
@@ -67,14 +78,41 @@ class TokenCreate(BaseModel):
     type: str
     amount: float
 
-origins = [
-    "http://localhost:3000",
-]
 
-app.add_middleware( # add protection against CORS
-    CORSMiddleware,
-    allow_origins=origins, # allow specific origins
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+# Dependency function for FastAPI routes
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close() # when request is complete 
+
+def hash_password(pw: str) -> str:
+    return sha256(pw.encode("utf-8")).hexdigest() 
+
+
+db_dependency = Annotated[Session, Depends(get_db)]
+
+models.Base.metadata.create_all(bind=engine) # database to create tables
+
+# endpoint to create a new user
+@app.post("/users/", response_model=UserModel, status_code=201)
+async def create_user(user: UserBase, db: db_dependency):
+    if db.query(models.User).filter(models.User.email == user.email).first():
+        raise HTTPException(status_code=409, detail="Email already registered")
+
+    # map all vars from User base to User table in SQL database
+
+    db_user = models.User(
+        name=user.name,
+        email=user.email,
+        role=user.role,
+        password_hash=hash_password(user.password)
+    )
+
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
