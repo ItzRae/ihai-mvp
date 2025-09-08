@@ -31,7 +31,7 @@ class UserBase(BaseModel):
 class UserModel(BaseModel):
     id: int
     name: str
-    email: EmailStr
+    email: str
     role: str
     
     class Config:
@@ -116,3 +116,8 @@ async def create_user(user: UserBase, db: db_dependency):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+@app.get("/users/", response_model=List[UserModel])
+async def read_users(db: db_dependency, skip: int = 0, limit: int = 100): # query params to fetch certain number of users
+    users = db.query(models.User).offset(skip).limit(limit).all()
+    return users
