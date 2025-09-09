@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #!/Users/hewanworku/Desktop/ihai-mvp/backend/venv/bin/python3.11
+=======
+#!/Users/rachellin/Desktop/important/IHAI/ihai-mvp/backend/venv/bin/python3
+>>>>>>> origin/rachel-edits
 # -*- coding: utf-8 -*-
 import re
 import sys

@@ -33,10 +33,17 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
+<<<<<<< HEAD
 set -gx VIRTUAL_ENV /Users/hewanworku/Desktop/ihai-mvp/backend/venv
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH
+=======
+set -gx VIRTUAL_ENV "/Users/rachellin/Desktop/important/IHAI/ihai-mvp/backend/venv"
+
+set -gx _OLD_VIRTUAL_PATH $PATH
+set -gx PATH "$VIRTUAL_ENV/bin" $PATH
+>>>>>>> origin/rachel-edits
 
 # Unset PYTHONHOME if set.
 if set -q PYTHONHOME
@@ -56,7 +63,11 @@ if test -z "$VIRTUAL_ENV_DISABLE_PROMPT"
         set -l old_status $status
 
         # Output the venv prompt; color taken from the blue of the Python logo.
+<<<<<<< HEAD
         printf "%s%s%s" (set_color 4B8BBE) '(venv) ' (set_color normal)
+=======
+        printf "%s%s%s" (set_color 4B8BBE) "(venv) " (set_color normal)
+>>>>>>> origin/rachel-edits
 
         # Restore the return status of the previous command.
         echo "exit $old_status" | .
@@ -65,5 +76,9 @@ if test -z "$VIRTUAL_ENV_DISABLE_PROMPT"
     end
 
     set -gx _OLD_FISH_PROMPT_OVERRIDE "$VIRTUAL_ENV"
+<<<<<<< HEAD
     set -gx VIRTUAL_ENV_PROMPT '(venv) '
+=======
+    set -gx VIRTUAL_ENV_PROMPT "(venv) "
+>>>>>>> origin/rachel-edits
 end
