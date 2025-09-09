@@ -9,18 +9,11 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-<<<<<<< HEAD
-    name = Column(String, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    role = Column(String, nullable=False)
-    password = Column(String, nullable=False)  # store a hashed password in practice
-=======
     name = Column(String(100), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     role = Column(String(32), nullable=False, default="volunteer")  # e.g., "admin", "user"
     password_hash = Column(String(255), nullable=True) # store a hashed password in practice
 >>>>>>> origin/rachel-edits
-
     # relationships
     shifts = relationship("Shift", back_populates="user", cascade="all, delete-orphan")
     tokens = relationship("TokenTransaction", back_populates="user", cascade="all, delete-orphan")
