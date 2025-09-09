@@ -1,4 +1,4 @@
-import React, { useStat, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from './api';
 
 const App = () => {
@@ -38,8 +38,32 @@ const App = () => {
       password: '' }); // reset form
   };
 
+  return (
+    <div className="table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        {users.map(user => (
+          <tr key={user.id}>
+            <td>{user.name}</td>
+            <td>{user.email}</td>
+            <td>{user.role}</td>
+          </tr>
+        ))}
+      </tbody>
+
+     </div> 
+
+  )
 
 }
+
+  
 
 
 export default App;

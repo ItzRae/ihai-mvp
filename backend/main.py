@@ -19,6 +19,9 @@ origins = [
 app.add_middleware( # add protection against CORS
     CORSMiddleware,
     allow_origins=origins, # allow specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ------ User Models ------
