@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, Foreig
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
+import passlib.hash 
 
 # ----------------- USER TABLE -----------------
 class User(Base):
@@ -12,7 +13,10 @@ class User(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     role = Column(String(32), nullable=False, default="volunteer")  # e.g., "admin", "user"
-    password_hash = Column(String(255), nullable=True) # store a hashed password in practice
+    password_hash = Column(String(255), nullable=False)
+
+    def verify_password(self, password: str):
+        return passlib.hash.bcrypt.verify(password, self.password_hash) # verify actual password against stored hash
 
     # relationships
     shifts = relationship("Shift", back_populates="user", cascade="all, delete-orphan")
@@ -24,6 +28,9 @@ class Shift(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    host_site = Column(String(100), nullable=True, default="")  # e.g., "Community Center", optional
+    date_created = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    date_last_modified = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
     task = Column(String, nullable=False)
 
     # store as DateTime; FastAPI/Pydantic will serialize to/from strings

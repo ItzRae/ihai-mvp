@@ -1,16 +1,19 @@
+import schemas 
 import uvicorn
+import jwt
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from typing import Optional, List, Annotated
 from datetime import datetime
 from database import SessionLocal, engine
-from hashlib import sha256
-
+from passlib.hash import bcrypt
 import models
+from fastapi.security import OAuth2PasswordRequestForm
 
 app = FastAPI()
+
+JWT_SECRET = "abc12345"
 
 origins = [
     "http://127.0.0.1:5173",
@@ -25,64 +28,6 @@ app.add_middleware( # add protection against CORS
     allow_headers=["*"],
 )
 
-# ------ User Models ------
-class UserBase(BaseModel):
-    name: str
-    email: str
-    role: Optional[str] = "volunteer"
-    password: str
-
-class UserModel(BaseModel):
-    id: int
-    name: str
-    email: str
-    role: str
-    
-    class Config:
-        orm_mode = True
-
-# ----- Shift Models -----
-
-class ShiftBase(BaseModel):
-    id: int
-    user_id: int
-    task: str
-    start_time: str
-    end_time: Optional[str] = None
-    approved: bool = False
-
-    class Config:
-        orm_mode = True
-
-class ShiftCreate(BaseModel):
-    user_id: int
-    task: str
-    start_time: Optional[str] = None
-
-class ShiftStop(BaseModel):
-    shift_id: int
-    end_time: Optional[str] = None
-
-# ------ Token Model ------
-
-class TokenTransaction(BaseModel):
-    id: int
-    user_id: int
-    shift_id: Optional[int] = None
-    type: str # "earn" or "spend"
-    amount: float
-    created_at: datetime
-
-    class Config:
-        orm_mode = True
-
-class TokenCreate(BaseModel):
-    user_id: int
-    shift_id: Optional[int] = None
-    type: str
-    amount: float
-
-
 
 # Dependency function for FastAPI routes
 
@@ -93,8 +38,26 @@ def get_db():
     finally:
         db.close() # when request is complete 
 
-def hash_password(pw: str) -> str:
-    return sha256(pw.encode("utf-8")).hexdigest() 
+
+async def get_user_by_email(email: str, db: Session):
+    return db.query(models.User).filter(models.User.email == email).first()    
+
+async def authenticate_user(email: str, password: str, db: Session):
+    user = await get_user_by_email(email=email, db=db)
+    if not user:
+        return False
+    
+    if not user.verify_password(password):
+        return False
+    
+    return user
+
+async def create_access_token(user: models.User):
+    user_obj = schemas.User.from_orm(user)
+
+    authtoken = jwt.encode(user_obj.dict(), JWT_SECRET, algorithm="HS256")
+
+    return dict(access_token=authtoken, token_type="bearer")
 
 
 db_dependency = Annotated[Session, Depends(get_db)]
@@ -102,26 +65,35 @@ db_dependency = Annotated[Session, Depends(get_db)]
 models.Base.metadata.create_all(bind=engine) # database to create tables
 
 # endpoint to create a new user
-@app.post("/users/", response_model=UserModel, status_code=201)
-async def create_user(user: UserBase, db: db_dependency):
-    if db.query(models.User).filter(models.User.email == user.email).first():
-        raise HTTPException(status_code=409, detail="Email already registered")
-
-    # map all vars from User base to User table in SQL database
-
-    db_user = models.User(
+@app.post("/users/", response_model=schemas.User, status_code=201)
+async def create_user(user: schemas.UserCreate, db: db_dependency):
+    
+    db_user = await get_user_by_email(user.email, db)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    user_obj = models.User(     # map all vars from User base to User table in SQL database
         name=user.name,
         email=user.email,
         role=user.role,
-        password_hash=hash_password(user.password)
+        password_hash=bcrypt.hash(user.password) # hash password for storage
     )
-
-    db.add(db_user)
+    db.add(user_obj)
     db.commit()
-    db.refresh(db_user)
-    return db_user
+    db.refresh(user_obj)
+    return user_obj
 
-@app.get("/users/", response_model=List[UserModel])
+
+
+@app.get("/users/", response_model=List[schemas.User])
 async def read_users(db: db_dependency, skip: int = 0, limit: int = 100): # query params to fetch certain number of users
     users = db.query(models.User).offset(skip).limit(limit).all()
     return users
+
+@app.post("/authtoken")
+async def generate_authtoken(db: db_dependency, form_data: OAuth2PasswordRequestForm = Depends(), ):
+    user = await authenticate_user(form_data.username, form_data.password, db)
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    
+    return await create_access_token(user)
