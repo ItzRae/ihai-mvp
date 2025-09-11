@@ -23,10 +23,12 @@ class User(UserBase):
 
 class ShiftBase(BaseModel): # sending only these fields when creating a shift
     task: str
-    start_time: str
-    end_time: Optional[str] = None
-    approved: bool = False
     host_site: Optional[str] = ""
+    # default is current time; can be overridden if needed
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+
+       
 
     model_config = ConfigDict(from_attributes=True) 
 
@@ -36,9 +38,10 @@ class ShiftCreate(ShiftBase):
 
 class Shift(ShiftBase):
     id: int
+    approved: bool = False
     user_id: int # once created, we can see which user it belongs to
-    date_created: str
-    date_last_modified: Optional[str] = None
+    date_created: datetime
+    date_last_modified: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True) 
 

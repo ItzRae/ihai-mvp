@@ -9,11 +9,13 @@ from datetime import datetime
 from database import SessionLocal, engine
 from passlib.hash import bcrypt
 import models
+import fastapi.security
 from fastapi.security import OAuth2PasswordRequestForm
 
 app = FastAPI()
 
 JWT_SECRET = "abc12345"
+oauth2schema = fastapi.security.OAuth2PasswordBearer(tokenUrl="/authtoken") # tokenUrl is the endpoint to get the token
 
 origins = [
     "http://127.0.0.1:5173",
@@ -28,6 +30,7 @@ app.add_middleware( # add protection against CORS
     allow_headers=["*"],
 )
 
+# ----- helper funcs -------
 
 # Dependency function for FastAPI routes
 
@@ -60,12 +63,49 @@ async def create_access_token(user: models.User):
     return dict(access_token=authtoken, token_type="bearer")
 
 
+async def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2schema)):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"]) # decode token to get user data
+        user = db.query(models.User).get(payload["id"]) # get user from db using id in token payload
+    except:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    return schemas.User.from_orm(user)
+
+async def _create_shift(user: models.User, 
+                       shift: schemas.ShiftCreate, 
+                       db: Session):
+    shift = models.Shift(**shift.model_dump(), 
+                         user_id=user.id) # unpack all fields from shift and add user_id
+    db.add(shift)
+    db.commit()
+    db.refresh(shift)
+    return schemas.Shift.from_orm(shift) # return shift as Pydantic model
+
+async def shift_selector(shift_id: int, db: Session, user: models.User):
+    shift = (
+        db.query(models.Shift)
+        .filter_by(user_id=user.id) # ensure user can only access their own shifts
+        .filter(models.Shift.id == shift_id)
+        .first()
+    )
+    if not shift:
+        raise HTTPException(status_code=404, detail="Shift not found")
+    
+    return shift
+
+async def _get_shift(shift_id: int, db: Session, user: models.User):
+    shift = await shift_selector(shift_id, db, user)
+    return schemas.Shift.from_orm(shift)
+
+# ----- endpoints --------
+
 db_dependency = Annotated[Session, Depends(get_db)]
 
 models.Base.metadata.create_all(bind=engine) # database to create tables
 
 # endpoint to create a new user
-@app.post("/users/", response_model=schemas.User, status_code=201)
+@app.post("/users/", status_code=201)
 async def create_user(user: schemas.UserCreate, db: db_dependency):
     
     db_user = await get_user_by_email(user.email, db)
@@ -81,14 +121,14 @@ async def create_user(user: schemas.UserCreate, db: db_dependency):
     db.add(user_obj)
     db.commit()
     db.refresh(user_obj)
-    return user_obj
 
-
+    return await create_access_token(user_obj) # return token instead of user details
 
 @app.get("/users/", response_model=List[schemas.User])
 async def read_users(db: db_dependency, skip: int = 0, limit: int = 100): # query params to fetch certain number of users
     users = db.query(models.User).offset(skip).limit(limit).all()
     return users
+    
 
 @app.post("/authtoken")
 async def generate_authtoken(db: db_dependency, form_data: OAuth2PasswordRequestForm = Depends(), ):
@@ -97,3 +137,20 @@ async def generate_authtoken(db: db_dependency, form_data: OAuth2PasswordRequest
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     
     return await create_access_token(user)
+
+@app.get("/api/users/me", response_model=schemas.User)
+async def get_user(user: models.User = Depends(get_current_user)):
+    return user
+
+# ------ shifts -----
+@app.post("/shifts/", response_model=schemas.Shift, status_code=201)
+async def create_shift(shift: schemas.ShiftCreate, 
+                       db: db_dependency, 
+                       current_user: models.User = Depends(get_current_user)):
+    return await _create_shift(current_user, shift, db) 
+    
+@app.get("/api/shifts/{shift_id}", response_model=schemas.Shift)
+async def get_shift(shift_id: int, 
+                    db: db_dependency, 
+                    current_user: models.User = Depends(get_current_user)):
+    return await _get_shift(shift_id, db, current_user)

@@ -28,7 +28,7 @@ class Shift(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    host_site = Column(String(100), nullable=True, default="")  # e.g., "Community Center", optional
+    host_site = Column(String(100), nullable=False, default="")  # e.g., "Community Center", optional
     date_created = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     date_last_modified = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
     task = Column(String, nullable=False)
