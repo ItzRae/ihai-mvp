@@ -5,7 +5,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import Optional, List, Annotated
-from datetime import datetime
+from datetime import datetime, timezone
 from database import SessionLocal, engine
 from passlib.hash import bcrypt
 import models
@@ -98,6 +98,27 @@ async def _get_shift(shift_id: int, db: Session, user: models.User):
     shift = await shift_selector(shift_id, db, user)
     return schemas.Shift.from_orm(shift)
 
+async def _delete_shift(shift_id: int, db: Session, user: models.User):
+    shift = await shift_selector(shift_id, db, user)
+    db.delete(shift)
+    db.commit()
+
+async def _update_shift(shift_id: int, 
+                        shift_data: schemas.ShiftCreate,
+                        db: Session, 
+                        user: models.User):
+    shift_db = await shift_selector(shift_id, db, user)
+    
+    shift_db.task = shift_data.task
+    shift_db.host_site = shift_data.host_site
+    shift_db.start_time = shift_data.start_time
+    shift_db.end_time = shift_data.end_time
+    shift_db.date_last_modified = datetime.now(timezone.utc) # update last modified time
+
+    db.commit()
+    db.refresh(shift_db)
+    return schemas.Shift.from_orm(shift_db)
+
 # ----- endpoints --------
 
 db_dependency = Annotated[Session, Depends(get_db)]
@@ -154,3 +175,18 @@ async def get_shift(shift_id: int,
                     db: db_dependency, 
                     current_user: models.User = Depends(get_current_user)):
     return await _get_shift(shift_id, db, current_user)
+
+@app.delete("/api/shifts/{shift_id}", status_code=200)
+async def delete_shift(shift_id: int, 
+                       db: db_dependency, 
+                       current_user: models.User = Depends(get_current_user)):
+    await _delete_shift(shift_id, db, current_user)
+    return {"message": "Shift deleted successfully"}
+
+@app.put("/api/shifts/{shift_id}", status_code=200)
+async def update_shift(shift_id: int, 
+                       shift: schemas.ShiftCreate,
+                       db: db_dependency, 
+                       current_user: models.User = Depends(get_current_user)):
+    await _update_shift(shift_id, shift, db, current_user)
+    return {"message": "Shift updated successfully"}
