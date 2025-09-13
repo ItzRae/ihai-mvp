@@ -15,7 +15,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 app = FastAPI()
 
 JWT_SECRET = "abc12345"
-oauth2schema = fastapi.security.OAuth2PasswordBearer(tokenUrl="/authtoken") # tokenUrl is the endpoint to get the token
+oauth2schema = fastapi.security.OAuth2PasswordBearer(tokenUrl="/api/authtoken/") # tokenUrl is the endpoint to get the token
 
 origins = [
     "http://127.0.0.1:5173",
@@ -126,7 +126,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 models.Base.metadata.create_all(bind=engine) # database to create tables
 
 # endpoint to create a new user
-@app.post("/users/", status_code=201)
+@app.post("/api/users/", status_code=201)
 async def create_user(user: schemas.UserCreate, db: db_dependency):
     
     db_user = await get_user_by_email(user.email, db)
@@ -145,13 +145,13 @@ async def create_user(user: schemas.UserCreate, db: db_dependency):
 
     return await create_access_token(user_obj) # return token instead of user details
 
-@app.get("/users/", response_model=List[schemas.User])
+@app.get("/api/users/", response_model=List[schemas.User])
 async def read_users(db: db_dependency, skip: int = 0, limit: int = 100): # query params to fetch certain number of users
     users = db.query(models.User).offset(skip).limit(limit).all()
     return users
     
 
-@app.post("/authtoken")
+@app.post("/api/authtoken/")
 async def generate_authtoken(db: db_dependency, form_data: OAuth2PasswordRequestForm = Depends(), ):
     user = await authenticate_user(form_data.username, form_data.password, db)
     if not user:
@@ -164,7 +164,7 @@ async def get_user(user: models.User = Depends(get_current_user)):
     return user
 
 # ------ shifts -----
-@app.post("/shifts/", response_model=schemas.Shift, status_code=201)
+@app.post("/api/shifts/", response_model=schemas.Shift, status_code=201)
 async def create_shift(shift: schemas.ShiftCreate, 
                        db: db_dependency, 
                        current_user: models.User = Depends(get_current_user)):
