@@ -9,3 +9,11 @@ __pycache__/
 # ignore envs & DBs
 backend/venv/
 venv/
+
+backend/venv/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.db
+*.sqlite*
