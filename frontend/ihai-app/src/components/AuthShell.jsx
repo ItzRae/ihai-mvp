@@ -1,18 +1,25 @@
 const AuthShell = ({ title = "Create an account", subtitle, children }) => {
     return (
-      // Let the PAGE scroll; use dvh to avoid mobile 100vh bugs
-      <div className="min-h-dvh bg-gray-100 flex items-center justify-center py-8 px-4 overflow-auto">
-        {/* Card: no global overflow-hidden; responsive width */}
-        <div className="w-full max-w-[1100px] grid md:grid-cols-2 rounded-2xl shadow-xl bg-white">
+      <div className="min-h-dvh flex items-center justify-center py-8 px-4 overflow-auto
+        bg-[radial-gradient(ellipse_80%_75%_at_center,rgba(173,216,230,0.6)_0%,white_70%)]">
   
-          {/* Left: image (hidden on small) */}
-          <div className="relative hidden md:block">
+        {/* Card */}
+        <div className="
+          w-full max-w-[1100px]
+          grid md:grid-cols-2
+          rounded-2xl shadow-lg bg-white
+          md:h-[85dvh]      /* make both sides share a fixed height on md+ */
+          overflow-hidden   /* clip the image to the rounded card */
+        ">
+  
+          {/* Left: image */}
+          <div className="relative hidden md:block h-full min-h-0">
             <img
               src="../src/assets/images/login-hero.png"
               alt=""
-              className="h-full w-full object-cover rounded-l-2xl"
+              className="h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-black/10 rounded-l-2xl" />
+            <div className="absolute inset-0 bg-black/10" />
             <div className="absolute top-4 left-4">
               <a
                 href="/"
@@ -21,20 +28,21 @@ const AuthShell = ({ title = "Create an account", subtitle, children }) => {
                 Back to website →
               </a>
             </div>
-
-            {/* IHAI logo far right corner */}
             <div className="absolute top-4 right-2">
-              <img src="../src/assets/images/ihai-logo-byline-color.png" alt="IHAI logo" className="h-16 w-auto" />
+              <img
+                src="../src/assets/images/ihai-logo-byline-color.png"
+                alt="IHAI logo"
+                className="h-16 w-auto"
+              />
             </div>
-
           </div>
   
-          {/* Right: make THIS panel scroll when content is long on tall screens */}
+          {/* Right: scrolls within the fixed card height */}
           <div className="
-              p-6 sm:p-8 md:p-10 text-gray-800
-              max-h-[85dvh] md:max-h-[90dvh] overflow-y-auto
-              rounded-2xl md:rounded-l-none
-            ">
+            p-6 sm:p-8 md:p-10 text-gray-800
+            h-full min-h-0 overflow-y-auto
+            rounded-2xl md:rounded-l-none
+          ">
             <h1 className="text-3xl sm:text-4xl font-bold mb-2">{title}</h1>
             {subtitle && <p className="mb-6 text-sm text-gray-600">{subtitle}</p>}
             {children}
