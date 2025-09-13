@@ -25,3 +25,11 @@ __pycache__/
 *.pyc
 *.db
 *.sqlite*
+
+backend/venv/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.db
+*.sqlite*
