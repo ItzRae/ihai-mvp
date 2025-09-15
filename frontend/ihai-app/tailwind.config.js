@@ -8,8 +8,12 @@ export default {
       extend: {
         colors: {
           primaryDarkBlue: "rgb(35, 61, 149)",     // #233d95
-          primaryTeal: "rgb(26, 148, 170)",        // #1a94aa
+          primaryTeal: "rgb(26, 148, 170)",    
+          lightTeal: "rgb(147, 205, 219)",    // #1a94aa
           secondaryDarkBlue: "rgb(19, 86, 137)",   // auth hero dark blue
+        },
+        fontFamily: {
+          mont: ["Mont", "ui-sans-serif", "system-ui"],
         },
       },
     },
