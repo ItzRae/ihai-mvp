@@ -1,10 +1,13 @@
 import React from "react";
 import AuthShell from "./components/AuthShell.jsx";
 import Register from "./components/Register.jsx";
-import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar.jsx";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Home from "./components/Home.jsx";
+import Login from "./components/Login.jsx";
 
 function App() {
+  const isAuthed = !!localStorage.getItem("access_token");
+
   return (
     <Routes>
       <Route
@@ -26,7 +29,29 @@ function App() {
           </AuthShell>
         }
       />
-      <Route path="/" element={<Navbar />}/>
+      <Route
+        path="/login"
+        element={
+         isAuthed ? (
+           <Navigate to="/" replace />
+         ) : (
+           <AuthShell
+             title="Welcome back"
+             subtitle={
+               <>
+                 Don't have an account?{" "}
+                 <a href="/register" className="text-indigo-600 hover:underline">
+                   Sign up
+                 </a>
+               </>
+             }
+           >
+             <Login />
+           </AuthShell>
+         )
+        }
+      />
+      <Route path="/" element={<Home />} />
       {/* add other routes here */}
     </Routes>
   );

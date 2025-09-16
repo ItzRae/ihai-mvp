@@ -1,7 +1,7 @@
 const AuthShell = ({ title = "Create an account", subtitle, children }) => {
     return (
       <div className="min-h-dvh flex items-center justify-center py-8 px-4 overflow-auto
-        bg-[radial-gradient(circle_at_top_left,rgba(var(--primary-dark-blue),0.4),rgba(var(--primary-teal),0.25),white)]">
+        bg-[radial-gradient(circle_at_top_left,rgba(var(--primary-dark-blue),0.4),white)]">
   
         {/* Card */}
         <div className="

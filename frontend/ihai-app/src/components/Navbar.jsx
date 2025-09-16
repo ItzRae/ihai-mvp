@@ -1,12 +1,28 @@
-import React, { useEffect } from "react";
+import React, { use, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaBars } from "react-icons/fa";
+import { UserContext } from "../context/UserContext.jsx";
+import { useContext } from "react";
 
 const Navbar = () => {
 
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [open, setOpen] = React.useState(false);
     const location = useLocation();
+
+    {/* handle logout */}
+      // read from context if available; fall back to localStorage
+    //   // (works with your existing Register/Login that set localStorage)
+    const accessToken = localStorage.getItem("access_token");
+    const firstName = localStorage.getItem("first_name") || "User";
+    const isAuthed = !!accessToken;
+
+    const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user_name");
+    // if you have UserContext -> setToken(null); setUser(null);
+    window.location.href = "/"; // simple reset; or use navigate("/")
+    };
 
     const navItems = [
         {
@@ -36,10 +52,6 @@ const Navbar = () => {
         }
     };
 
-    const closeNavbar = () => {
-
-    }
-
     useEffect(() => {
         window.addEventListener('scroll', handleScroll);
         return () => {
@@ -50,11 +62,9 @@ const Navbar = () => {
     return (
         <div
             id="navbar"
-            className={`w-full h-[8ch] backdrop-blur-sm flex items-center
-            justify-between md:px-12 sm:px-6 border-b px-4 fixed top-0 transition-all
-            border-neutral-200 ease-in duration-300 shadow-sm z-50 
-            ${isScrolled ? 'bg-sky050/30 border-sky -200' : 
-            'bg-transparent'}`} >
+            className={`fixed top-0 z-50 w-full h-[8ch] border-b border-neutral-200
+             flex items-center justify-between px-4 sm:px-6 md:px-12
+             bg-sky-50/85 backdrop-blur ${isScrolled ? 'shadow-md' : 'shadow-sm'}`} >
 
             {/* Logo section */}
 
@@ -94,25 +104,43 @@ const Navbar = () => {
                     </ul>
 
                     
-                    {/* Navbar buttons */}
+                    {/* Auth-aware buttons */}
                     <div className="flex flex-col md:flex-row items-center gap-4">
-                    <Link
-                        to="/login"
-                        className="w-fit px-6 py-2 md:text-base text-2xl
-                                text-neutral-800 hover:text-sky-700 ease-in-out duration-300
-                                cursor-pointer"
-                    >
-                        Login
-                    </Link>
-
-                    <Link
-                        to="/register"
-                        className="w-fit px-6 py-2 rounded-lg bg-neutral-800 hover:rounded-xl
-                                hover:bg-neutral-600 md:text-base text-2xl text-neutral-50
-                                hover:text-cyan-500 duration-300 cursor-pointer"
-                    >
-                        Get Started
-                    </Link>
+                    {isAuthed ? (
+                        <>
+                        <span className="px-3 py-2 text-sm md:text-base text-neutral-700">
+                            Welcome, <span className="font-semibold">{firstName}</span>
+                        </span>
+                        <button
+                            onClick={handleLogout}
+                            className="w-fit px-6 py-2 rounded-lg bg-neutral-800 hover:rounded-xl
+                                    hover:bg-neutral-600 md:text-base text-2xl text-neutral-50
+                                    hover:text-red-300 transition-all"
+                        >
+                            Logout
+                        </button>
+                        </>
+                    ) : (
+                        <>
+                        <Link
+                            to="/login"
+                            className="w-fit px-6 py-2 md:text-base text-2xl
+                                    text-neutral-800 hover:text-sky-700 transition-colors"
+                            onClick={() => setOpen(false)}
+                        >
+                            Login
+                        </Link>
+                        <Link
+                            to="/register"
+                            className="w-fit px-6 py-2 rounded-lg bg-neutral-800 hover:rounded-xl
+                                    hover:bg-neutral-600 md:text-base text-2xl text-neutral-50
+                                    hover:text-cyan-500 transition-all"
+                            onClick={() => setOpen(false)}
+                        >
+                            Get Started
+                        </Link>
+                        </>
+                    )}
                     </div>
                 </div>
             </div>

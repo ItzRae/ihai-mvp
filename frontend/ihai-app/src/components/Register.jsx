@@ -1,6 +1,7 @@
 import React, { useContext, useState, memo } from "react";
 import { UserContext } from "../context/UserContext";
 import ErrorMessage from "./ErrorMessage";
+import { useNavigate } from "react-router-dom";
 
 /* moved OUT of Register, top-level + memo so it never remounts unnecessarily */
 const Field = memo(function Field({ label, children }) {
@@ -14,6 +15,8 @@ const Field = memo(function Field({ label, children }) {
 
 const Register = () => {
   const { setToken } = useContext(UserContext);
+    const navigate = useNavigate();
+  
 
   const [first, setFirst] = useState("");
   const [last, setLast]   = useState("");
@@ -44,13 +47,24 @@ const Register = () => {
         setError(data?.detail || "Registration failed");
         return;
       }
-      if (data.access_token) setToken(data.access_token);
-      else setError("Registered, but no token returned.");
+      
+      if (data.access_token) {
+        setToken(data.access_token);
+        localStorage.setItem("user_name", name);
+        const firstTrim = first.trim();   
+        if (firstTrim) {
+          localStorage.setItem("first_name", firstTrim);
+        }
+      } else {
+        setError("Registered, but no token returned.");
+      }
+
     } catch {
       setError("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
+    navigate("/", { replace: true });
   };
 
   const handleSubmit = (e) => {
