@@ -128,7 +128,7 @@ const Login = () => {
                      shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed
                      disabled:bg-indigo-300"
         >
-          {submitting ? "Signing in..." : "Sign in"}
+          {submitting ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>

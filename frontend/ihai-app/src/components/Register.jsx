@@ -1,9 +1,11 @@
-import React, { useContext, useState, memo } from "react";
+import React, { useContext, useEffect, useState, memo } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import ErrorMessage from "./ErrorMessage";
-import { useNavigate } from "react-router-dom";
+import { FaUser, FaHandHoldingUsd } from "react-icons/fa";
 
-/* moved OUT of Register, top-level + memo so it never remounts unnecessarily */
+
+/* field wrapper */
 const Field = memo(function Field({ label, children }) {
   return (
     <div className="space-y-2">
@@ -15,9 +17,13 @@ const Field = memo(function Field({ label, children }) {
 
 const Register = () => {
   const { setToken } = useContext(UserContext);
-    const navigate = useNavigate();
-  
+  const navigate = useNavigate();
 
+  // wizard
+  const [step, setStep] = useState(1);             // 1 = choose role, 2 = form
+  const [role, setRole] = useState(null);          // 'general' | 'investor'
+
+  // form fields
   const [first, setFirst] = useState("");
   const [last, setLast]   = useState("");
   const [email, setEmail] = useState("");
@@ -28,47 +34,57 @@ const Register = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // // restore pending role if you want
+  // useEffect(() => {
+  //   const saved = localStorage.getItem("pending_role");
+  //   if (saved && !role) { setRole(saved); setStep(2); }
+  // }, [role]);
+
+  const inputClass =
+    "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 " +
+    "placeholder:text-gray-400 focus:outline-none focus:ring-2 " +
+    "focus:ring-indigo-200 focus:border-indigo-500 hover:border-gray-400";
+
   const submitRegistration = async () => {
     setError("");
     setSubmitting(true);
     const name = `${first.trim()} ${last.trim()}`.trim();
 
     try {
-        const requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({name, email,password })
-        };
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, role }), // include role
+      });
+      const data = await res.json();
 
-        const response = await fetch("/api/users", requestOptions);
-        const data = await response.json();
-
-      if (!response.ok) {
+      if (!res.ok) {
         setError(data?.detail || "Registration failed");
         return;
       }
-      
+
       if (data.access_token) {
         setToken(data.access_token);
         localStorage.setItem("user_name", name);
-        const firstTrim = first.trim();   
-        if (firstTrim) {
-          localStorage.setItem("first_name", firstTrim);
-        }
+        const firstTrim = first.trim();
+        if (firstTrim) localStorage.setItem("first_name", firstTrim);
+        localStorage.setItem("user_role", role);
+        localStorage.removeItem("pending_role");
       } else {
         setError("Registered, but no token returned.");
+        return;
       }
-
+      navigate("/", { replace: true });
     } catch {
       setError("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
-    navigate("/", { replace: true });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!role) return setError("Please select a role to continue.");
     if (!agree) return setError("Please agree to the Terms & Conditions.");
     if (password !== confirm || password.length < 5)
       return setError("Passwords must match and be at least 5 characters.");
@@ -77,59 +93,95 @@ const Register = () => {
     submitRegistration();
   };
 
-  const inputClass =
-    "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 " +
-    "placeholder:text-gray-400 " + // ⬅️ space added before focus classes
-    "focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 " +
-    "hover:border-gray-400";
-
   return (
     <div className="w-full max-w-xl">
-      <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Step 1: Role selection */}
+      <div
+        className={`transition-all duration-300 ${
+          step === 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none h-0 overflow-hidden"
+        }`}
+        aria-hidden={step !== 1}
+      >
+        <h2 className="text-lg font-semibold mb-1">Select Role</h2>
+        <p className="text-xs text-gray-500 mb-4">
+          Choose how you’ll use IHAI. You have the option to upgrade your role later.
+        </p>
+
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => { setRole("volunteer"); localStorage.setItem("pending_role","volunteer"); setStep(2); }}
+            className="w-full text-left rounded-xl border px-4 py-4 bg-white hover:bg-cyan-500/15 hover:border-gray-400 transition"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-medium">User / Volunteer</span>
+              <FaUser className="text-cyan-600" />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Log shifts, earn credits, redeem, create projects & teams.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setRole("investor"); localStorage.setItem("pending_role","investor"); setStep(2); }}
+            className="w-full text-left rounded-xl border px-4 py-4 bg-white hover:bg-cyan-500/15 hover:border-gray-400 transition"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Investor / Donor</span>
+              <FaHandHoldingUsd className="text-cyan-600" />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Signup to donate/invest in our mission.
+            </p>
+          </button>
+        </div>
+      </div>
+
+      {/* Step 2: Form (your existing fields) */}
+      <form
+        onSubmit={handleSubmit}
+        className={`space-y-5 transition-all duration-300 ${
+          step === 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none h-0 overflow-hidden"
+        }`}
+        aria-hidden={step !== 2}
+      >
+        {role && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 px-3 py-1">
+              Role: {role === "volunteer" ? "User/Volunteer" : "Investor/Donor"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="text-xs text-indigo-600 hover:underline"
+            >
+              change
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="First name">
-            <input
-              type="text"
-              className={inputClass}
-              value={first}
-              onChange={(e) => setFirst(e.target.value)}
-              placeholder="First name"
-              required
-            />
+            <input type="text" className={inputClass} value={first}
+              onChange={(e) => setFirst(e.target.value)} placeholder="First name" required />
           </Field>
           <Field label="Last name">
-            <input
-              type="text"
-              className={inputClass}
-              value={last}
-              onChange={(e) => setLast(e.target.value)}
-              placeholder="Last name"
-              required
-            />
+            <input type="text" className={inputClass} value={last}
+              onChange={(e) => setLast(e.target.value)} placeholder="Last name" required />
           </Field>
         </div>
 
         <Field label="Email">
-          <input
-            type="email"
-            className={inputClass}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            required
-          />
+          <input type="email" className={inputClass} value={email}
+            onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
         </Field>
 
         <Field label="Password">
           <div className="relative">
-            <input
-              type={showPw ? "text" : "password"}
-              className={inputClass + " pr-12"}
-              value={password}
-              onChange={(e) => setPw(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
+            <input type={showPw ? "text" : "password"} className={inputClass + " pr-12"}
+              value={password} onChange={(e) => setPw(e.target.value)}
+              placeholder="Enter your password" required />
             <button
               type="button"
               onClick={() => setShowPw((s) => !s)}
@@ -142,24 +194,14 @@ const Register = () => {
         </Field>
 
         <Field label="Confirm password">
-          <input
-            type="password"
-            className={inputClass}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Confirm password"
-            required
-          />
+          <input type="password" className={inputClass} value={confirm}
+            onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm password" required />
         </Field>
 
         <div className="flex items-start gap-3 pt-2">
-          <input
-            id="agree"
-            type="checkbox"
-            checked={agree}
+          <input id="agree" type="checkbox" checked={agree}
             onChange={(e) => setAgree(e.target.checked)}
-            className="mt-1 h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-          />
+            className="mt-1 h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
           <label htmlFor="agree" className="text-sm text-gray-700">
             I agree to the{" "}
             <a href="/terms" target="_blank" className="text-indigo-600 hover:underline">
@@ -169,29 +211,6 @@ const Register = () => {
         </div>
 
         <ErrorMessage message={error} />
-
-        {/* Divider + Social (placeholders) */}
-        <div className="relative my-4">
-          <hr />
-          <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-white px-3 text-xs text-gray-500">
-            Or register with
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium hover:border-gray-400"
-          >
-            <span className="mr-2">🔍</span> Google
-          </button>
-          <button
-            type="button"
-            className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium hover:border-gray-400"
-          >
-            <span className="mr-2"></span> Apple
-          </button>
-        </div>
 
         <button
           type="submit"
