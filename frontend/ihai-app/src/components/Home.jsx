@@ -1,6 +1,7 @@
 import Navbar from "./Navbar.jsx";
 
 const Home = () => {
+    // const isAuthed = !!localStorage.getItem("access_token");
 
     return (
         <>

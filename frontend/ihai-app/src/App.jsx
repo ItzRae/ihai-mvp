@@ -10,6 +10,8 @@ function App() {
 
   return (
     <Routes>
+
+      {/* Public routes */}
       <Route
         path="/register"
         element={
@@ -52,7 +54,10 @@ function App() {
         }
       />
       <Route path="/" element={<Home />} />
-      {/* add other routes here */}
+
+      {/* PRIVATE routes*/}
+
+
     </Routes>
   );
 }

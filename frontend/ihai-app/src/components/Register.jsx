@@ -2,8 +2,31 @@ import React, { useContext, useEffect, useState, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import ErrorMessage from "./ErrorMessage";
-import { FaUser, FaHandHoldingUsd } from "react-icons/fa";
+import { FaUser, FaHandHoldingUsd, FaClock} from "react-icons/fa";
 
+
+
+
+const ROLES = [
+  {
+    id: "volunteer",
+    name: "User / Volunteer",
+    desc: "Log shifts, earn credits, redeem, create projects & teams.",
+    Icon: FaUser,
+  },
+  // {
+  //   id: "investor",
+  //   name: "Investor / Donor",
+  //   desc: "Signup to donate/invest in our mission.",
+  //   Icon: FaHandHoldingUsd,
+  // },
+  {
+    id: "agent",
+    name: "Agent",
+    desc: "Verify user shifts, gain more rewards",
+    Icon: FaClock,
+  }
+];
 
 /* field wrapper */
 const Field = memo(function Field({ label, children }) {
@@ -69,7 +92,6 @@ const Register = () => {
         const firstTrim = first.trim();
         if (firstTrim) localStorage.setItem("first_name", firstTrim);
         localStorage.setItem("user_role", role);
-        localStorage.removeItem("pending_role");
       } else {
         setError("Registered, but no token returned.");
         return;
@@ -92,6 +114,8 @@ const Register = () => {
       return setError("Please enter your first and last name.");
     submitRegistration();
   };
+  
+  const selectedRole = ROLES.find(r => r.id === role);
 
   return (
     <div className="w-full max-w-xl">
@@ -104,41 +128,31 @@ const Register = () => {
       >
         <h2 className="text-lg font-semibold mb-1">Select Role</h2>
         <p className="text-xs text-gray-500 mb-4">
-          Choose how you’ll use IHAI. You have the option to upgrade your role later.
+          Choose how you’ll use IHAI. You can upgrade your role later.
         </p>
 
         <div className="space-y-3">
-          <button
-            type="button"
-            onClick={() => { setRole("volunteer"); localStorage.setItem("pending_role","volunteer"); setStep(2); }}
-            className="w-full text-left rounded-xl border px-4 py-4 bg-white hover:bg-cyan-500/15 hover:border-gray-400 transition"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-medium">User / Volunteer</span>
-              <FaUser className="text-cyan-600" />
-            </div>
-            <p className="mt-1 text-xs text-gray-500">
-              Log shifts, earn credits, redeem, create projects & teams.
-            </p>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setRole("investor"); localStorage.setItem("pending_role","investor"); setStep(2); }}
-            className="w-full text-left rounded-xl border px-4 py-4 bg-white hover:bg-cyan-500/15 hover:border-gray-400 transition"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Investor / Donor</span>
-              <FaHandHoldingUsd className="text-cyan-600" />
-            </div>
-            <p className="mt-1 text-xs text-gray-500">
-              Signup to donate/invest in our mission.
-            </p>
-          </button>
+          {ROLES.map(({ id, name, desc, Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => { setRole(id); setStep(2); }}
+              className="w-full text-left rounded-xl border px-4 py-4 bg-white
+                         hover:bg-cyan-500/15 hover:border-gray-400 transition"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-medium flex items-center gap-2">
+                  <Icon className="text-cyan-600" />
+                  {name}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">{desc}</p>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Step 2: Form (your existing fields) */}
+      {/* Step 2: Form */}
       <form
         onSubmit={handleSubmit}
         className={`space-y-5 transition-all duration-300 ${
@@ -146,10 +160,10 @@ const Register = () => {
         }`}
         aria-hidden={step !== 2}
       >
-        {role && (
+        {selectedRole && (
           <div className="flex items-center gap-2 text-sm">
             <span className="rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 px-3 py-1">
-              Role: {role === "volunteer" ? "User/Volunteer" : "Investor/Donor"}
+              Role: {selectedRole.name}
             </span>
             <button
               type="button"
