@@ -1,17 +1,25 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import { BrowserRouter } from 'react-router-dom' // listens for URL changes
-import ReactDOM from "react-dom/client";
 
-import App from './App.jsx'
-import { UserProvider } from './context/UserContext.jsx'
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import "./index.css";
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-      <UserProvider>
-        <App />
-      </UserProvider>
-  </StrictMode>,
-)
+import AdminLayout from "./Admin/AdminLayout.jsx";
+import Dashboard from "./Admin/Dashboard/Dashboard.jsx";
+import Calendar from "./Admin/Sidebar/Calendar.jsx"; // <-- new
+
+createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Navigate to="/admin" replace />} />
+
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="calendar" element={<Calendar />} />   {/* new */}
+      </Route>
+
+      <Route path="*" element={<Navigate to="/admin" replace />} />
+    </Routes>
+  </BrowserRouter>
+);
