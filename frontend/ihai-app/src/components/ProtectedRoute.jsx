@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom"
 
-const ProtectedRoute = ({ roles }) => {
+const ProtectedRoute = ({ children, roles }) => {
     const isAuthed  = !!window.localStorage.getItem("access_token");
     const role = window.localStorage.getItem("user_role");
     
@@ -15,7 +15,7 @@ const ProtectedRoute = ({ roles }) => {
     return <Navigate to={location.state?.from?.pathname || "/"} replace />;
   }
 
-    return <Outlet/> 
+    return children ?? <Outlet/> 
 
 }
 

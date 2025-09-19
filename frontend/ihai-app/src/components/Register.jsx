@@ -1,8 +1,7 @@
 import React, { useContext, useEffect, useState, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
-import ErrorMessage from "./ErrorMessage";
-import { FaUser, FaHandHoldingUsd, FaClock} from "react-icons/fa";
+import { FaUser, FaHandHoldingUsd, FaClock, FaHandHolding} from "react-icons/fa";
 
 
 
@@ -25,6 +24,12 @@ const ROLES = [
     name: "Agent",
     desc: "Verify user shifts, gain more rewards",
     Icon: FaClock,
+  },
+  {
+    id: "admin",
+    name: "Admin",
+    desc: "TEMPORARY: full access + permissions",
+    Icon: FaHandHolding,
   }
 ];
 
@@ -74,7 +79,7 @@ const Register = () => {
     const name = `${first.trim()} ${last.trim()}`.trim();
 
     try {
-      const res = await fetch("/api/users", {
+      const res = await fetch("/api/users/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role }), // include role
@@ -82,7 +87,7 @@ const Register = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data?.detail || "Registration failed");
+        console.error("Registration failed:", { status: res.status, data});
         return;
       }
 
@@ -223,8 +228,6 @@ const Register = () => {
             </a>
           </label>
         </div>
-
-        <ErrorMessage message={error} />
 
         <button
           type="submit"

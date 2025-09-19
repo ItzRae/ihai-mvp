@@ -13,12 +13,12 @@ const Navbar = () => {
     {/* handle logout */}
       // read from context if available; fall back to localStorage
     //   // (works with your existing Register/Login that set localStorage)
-    const accessToken = localStorage.getItem("access_token");
+    const accessToken = localStorage.getItem("ihaitimeToken");
     const firstName = localStorage.getItem("first_name") || "User";
     const isAuthed = !!accessToken;
 
     const handleLogout = () => {
-    localStorage.removeItem("access_token");
+    localStorage.removeItem("ihaitimeToken");
     localStorage.removeItem("user_name");
     // if you have UserContext -> setToken(null); setUser(null);
     window.location.href = "/"; // simple reset; or use navigate("/")

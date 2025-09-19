@@ -1,7 +1,6 @@
 import React, { useContext, useState, useEffect, memo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
-import ErrorMessage from "./ErrorMessage";
 
 /* tiny field wrapper for consistency */
 const Field = memo(function Field({ label, children }) {
@@ -32,13 +31,13 @@ const Login = () => {
     "placeholder:text-gray-400 focus:outline-none focus:ring-2 " +
     "focus:ring-indigo-200 focus:border-indigo-500 hover:border-gray-400";
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  const handleLogin = async (e) => {
     setSubmitting(true);
+    console.log("HANDLING...")
+
 
     try {
-      const res = await fetch("/api/authtoken", {
+      const res = await fetch("/api/authtoken/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded"},
         body: JSON.stringify(
@@ -48,34 +47,26 @@ const Login = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data?.detail || "Invalid email or password.");
+        console.error(data?.detail || "Invalid email or password.");
         return;
+      } else {
+        setToken(data.access_token)
       }
 
-      const access = data.access_token;
-      if (!access) {
-        setError("Logged in, but no token returned.");
-        return;
-      }
-
-      // persist + context
-      localStorage.setItem("access_token", access);
-      if (setToken) setToken(access);
-
-      const nameFromApi = data?.name;
-      const fallbackName = email?.split("@")[0] || "User";
-      const finalName = nameFromApi || fallbackName;
-
-      localStorage.setItem("user_name", finalName);
-      if (setUser) setUser({ name: finalName, email });
+        setUser?.({ name: finalName, email });
 
       navigate("/", { replace: true });
     } catch {
-      setError("Network error. Please try again.");
+      console.log("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleLogin();
+  }
 
   return (
     <div className="w-full max-w-xl">
@@ -118,8 +109,6 @@ const Login = () => {
             Forgot password?
           </Link>
         </div>
-
-        <ErrorMessage message={error} />
 
         <button
           type="submit"
