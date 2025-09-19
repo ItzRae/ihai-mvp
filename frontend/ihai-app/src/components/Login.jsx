@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect, memo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
+import ErrorMessage from "./ErrorMessage";
 
 /* tiny field wrapper for consistency */
 const Field = memo(function Field({ label, children }) {
@@ -19,7 +20,9 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
 
 //   useEffect(() => {
 //     if (token) navigate("/", { replace: true });
@@ -32,8 +35,6 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     setSubmitting(true);
-    console.log("HANDLING...")
-
 
     try {
       const res = await fetch("/api/authtoken/", {
@@ -43,20 +44,29 @@ const Login = () => {
             `grant_type=&username=${email}&password=${password}&scope=&client_id=&client_secret=`
         ),
       });
-      const data = await res.json();
+      const text = await res.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch {}
 
       if (!res.ok) {
-        console.error(data?.detail || "Invalid email or password.");
+        setError(data?.detail || "Invalid email or password.");
         return;
       } else {
-        setToken(data.access_token)
+        if (data.access_token) setToken(data.access_token)
+        localStorage.setItem("access_token", data.access_token);
+        const nameFromApi = data?.name;
+        const fallbackName = email?.split("@")[0] || "User";
+        const finalName = nameFromApi || fallbackName;
+
+        localStorage.setItem("user_name", finalName);
+        localStorage.setItem("first_name", finalName.split(/\s+/)[0]);
+
       }
 
-        setUser?.({ name: finalName, email });
-
-      navigate("/", { replace: true });
+    const role = localStorage.getItem("user_role") || "volunteer";
+    navigate(role === "admin" ? "/admin" : "/home", { replace: true }); 
     } catch {
-      console.log("Network error. Please try again.");
+        setError("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -102,12 +112,15 @@ const Login = () => {
           </div>
         </Field>
 
+
         <div className="flex items-center justify-between text-sm">
           <div />
           <Link to="/forgot" className="text-indigo-600 hover:underline">
             Forgot password?
           </Link>
         </div>
+        
+        <ErrorMessage message={error} /> 
 
         <button
           type="submit"

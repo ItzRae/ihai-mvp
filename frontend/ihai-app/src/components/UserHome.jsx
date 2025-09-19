@@ -1,4 +1,5 @@
 import Navbar from "./Navbar.jsx";
+import UsersTable from "./UsersTable.jsx";
 
 const UserHome = () => {
     // const isAuthed = !!localStorage.getItem("access_token");
@@ -6,7 +7,11 @@ const UserHome = () => {
     return (
         <>
         <Navbar />
-        <div>USER HOME</div>
+        <section className="mt-30"> 
+            <h1>TEMP USER HOME</h1>       
+            <UsersTable/>
+        </section>
+
         </>
     )
 

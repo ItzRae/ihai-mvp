@@ -61,15 +61,15 @@ function App() {
       <Route path="/" element={<Home />} />
 
       {/* PRIVATE routes*/}
-      {/* <Route
-        path="/user"
+      <Route
+        path="/home"
         element={
-          <ProtectedRoute roles={["volunteer"]}>
+          <ProtectedRoute roles={["volunteer", "admin"]}>
             <UserHome />
           </ProtectedRoute>
         }
       >
-      </Route> */}
+      </Route>
 
       <Route
         path="/admin"

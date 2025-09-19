@@ -13,13 +13,16 @@ const Navbar = () => {
     {/* handle logout */}
       // read from context if available; fall back to localStorage
     //   // (works with your existing Register/Login that set localStorage)
-    const accessToken = localStorage.getItem("ihaitimeToken");
-    const firstName = localStorage.getItem("first_name") || "User";
+    const accessToken = localStorage.getItem("access_token");
     const isAuthed = !!accessToken;
+    const firstName = localStorage.getItem("first_name") || "User";
+
 
     const handleLogout = () => {
-    localStorage.removeItem("ihaitimeToken");
+    localStorage.removeItem("access_token");
     localStorage.removeItem("user_name");
+    localStorage.removeItem("first_name")
+
     // if you have UserContext -> setToken(null); setUser(null);
     window.location.href = "/"; // simple reset; or use navigate("/")
     };
@@ -113,8 +116,8 @@ const Navbar = () => {
                         </span>
                         <button
                             onClick={handleLogout}
-                            className="w-fit px-6 py-2 rounded-lg bg-neutral-800 hover:rounded-xl
-                                    hover:bg-neutral-600 md:text-base text-2xl text-neutral-50
+                            className="w-fit px-6 py-2 rounded-lg bg-cyan-800 hover:rounded-xl
+                                    hover:bg-neutral-700 md:text-base text-2xl text-neutral-50
                                     hover:text-red-300 transition-all"
                         >
                             Logout
@@ -132,9 +135,9 @@ const Navbar = () => {
                         </Link>
                         <Link
                             to="/register"
-                            className="w-fit px-6 py-2 rounded-lg bg-neutral-800 hover:rounded-xl
-                                    hover:bg-neutral-600 md:text-base text-2xl text-neutral-50
-                                    hover:text-cyan-500 transition-all"
+                            className="w-fit px-6 py-2 rounded-lg bg-cyan-700 hover:rounded-xl
+                                    hover:bg-neutral-700 md:text-base text-2xl text-neutral-50
+                                    hover:text-cyan-100 transition-all"
                             onClick={() => setOpen(false)}
                         >
                             Get Started

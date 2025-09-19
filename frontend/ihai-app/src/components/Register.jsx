@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { FaUser, FaHandHoldingUsd, FaClock, FaHandHolding} from "react-icons/fa";
-
+import ErrorMessage from "./ErrorMessage";
 
 
 
@@ -59,6 +59,7 @@ const Register = () => {
   const [confirm, setConfirm] = useState("");
   const [agree, setAgree] = useState(false);
   const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // // restore pending role if you want
@@ -86,23 +87,25 @@ const Register = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        console.error("Registration failed:", { status: res.status, data});
+        setError("Registration failed:", { status: res.status, data});
         return;
       }
 
       if (data.access_token) {
         setToken(data.access_token);
         localStorage.setItem("user_name", name);
+         localStorage.setItem("access_token", data.access_token);
+
         const firstTrim = first.trim();
         if (firstTrim) localStorage.setItem("first_name", firstTrim);
         localStorage.setItem("user_role", role);
       } else {
-        console.error("Registered, but no token returned.");
+        setError("Registered, but no token returned.");
         return;
       }
-      navigate("/", { replace: true });
+      navigate(role === "admin" ? "/admin" : "/home", { replace: true }); 
     } catch {
-      console.error("Network error. Please try again.");
+      setError("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -227,6 +230,8 @@ const Register = () => {
             </a>
           </label>
         </div>
+
+        <ErrorMessage message={error}/>
 
         <button
           type="submit"
