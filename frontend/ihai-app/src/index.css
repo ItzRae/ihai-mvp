@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+:root {
+  --primary-dark-blue: 35, 61, 149;     /* #233d95 */
+  --primary-teal: 26, 148, 170;         /* #1a94aa */
+  --secondary-dark-blue: 19, 86, 137;   /* #135689 */
+  --light-teal: 147, 205, 219;          /* #93cddc */
+}
+
+* {
+  font-family: "Sora", sans-serif;
+  box-sizing: border-box;
+}

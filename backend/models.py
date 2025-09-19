@@ -3,17 +3,23 @@ from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, Foreig
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
+import passlib.hash 
+
+
 
 # ----------------- USER TABLE -----------------
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    role = Column(String(32), nullable=False, default="volunteer")  # e.g., "admin", "user"
-    password_hash = Column(String(255), nullable=True) # store a hashed password in practice
->>>>>>> origin/rachel-edits
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    role = Column(String, nullable=False)
+    password_hash = Column(String, nullable=False)  # store a hashed password in practice
+
+    def verify_password(self, password: str):
+        return passlib.hash.bcrypt.verify(password, self.password_hash)
+
     # relationships
     shifts = relationship("Shift", back_populates="user", cascade="all, delete-orphan")
     tokens = relationship("TokenTransaction", back_populates="user", cascade="all, delete-orphan")

@@ -19,7 +19,6 @@ SessionLocal = sessionmaker(
 # Base class for models
 Base = declarative_base()
 
-<<<<<<< HEAD
 # Dependency function for FastAPI routes
 def get_db():
     db = SessionLocal()
@@ -27,6 +26,3 @@ def get_db():
         yield db
     finally:
         db.close()
-=======
-
->>>>>>> origin/rachel-edits
