@@ -19,7 +19,6 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
 //   useEffect(() => {

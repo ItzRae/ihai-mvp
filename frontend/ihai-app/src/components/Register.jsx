@@ -59,7 +59,6 @@ const Register = () => {
   const [confirm, setConfirm] = useState("");
   const [agree, setAgree] = useState(false);
   const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // // restore pending role if you want
@@ -98,12 +97,12 @@ const Register = () => {
         if (firstTrim) localStorage.setItem("first_name", firstTrim);
         localStorage.setItem("user_role", role);
       } else {
-        setError("Registered, but no token returned.");
+        console.error("Registered, but no token returned.");
         return;
       }
       navigate("/", { replace: true });
     } catch {
-      setError("Network error. Please try again.");
+      console.error("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
